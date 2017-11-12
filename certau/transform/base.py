@@ -4,7 +4,7 @@ import copy
 import types
 import six
 
-from mixbox.entities import EntityList
+from mixbox.entities import Entity, EntityList
 from cybox.core import Object
 from cybox.common import ObjectProperties
 from stix.core import STIXPackage
@@ -70,8 +70,9 @@ class StixTransform(object):
     STRING_CONDITION_CONSTRAINT = list()
 
     def __init__(self, package, default_title=None, default_description=None,
-                 default_tlp='AMBER'):
+                 default_tlp='AMBER', stix_version="1.2"):
         self.package = package
+        self.stix_version = stix_version
         self.observables = self._observables_for_package(package)
         self.default_title = default_title
         self.default_description = default_description
@@ -92,6 +93,7 @@ class StixTransform(object):
         if not isinstance(package, STIXPackage):
             raise TypeError('expected STIXPackage object')
         self._package = package
+        self._stix_version = package.version
 
     @property
     def default_title(self):
@@ -121,6 +123,16 @@ class StixTransform(object):
         if str(tlp) not in stix_helpers.TLP_COLOURS:
             raise TypeError('invalid TLP colour')
         self._default_tlp = str(tlp)
+
+    @property
+    def stix_version(self):
+        return self._stix_version
+
+    @stix_version.setter
+    def stix_version(self, stix_version):
+        if str(stix_version) not in stix_helpers.SUPPORTED_STIX_VERSIONS:
+            raise TypeError('unsupported STIX version')
+        self._stix_version = str(stix_version)
 
     @property
     def observables(self):

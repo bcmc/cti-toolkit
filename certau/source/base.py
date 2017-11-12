@@ -1,11 +1,12 @@
 import logging
 import os
+import warnings
 
 import ramrod
 from stix.core import STIXPackage
 from stix.utils.parser import UnsupportedVersionError
-from stix.extensions.marking import ais  # Needed to support AIS Markings
 
+LATEST_STIX_VERSION = "1.2"
 
 class StixSourceItem(object):
     """A base class for STIX package containers."""
@@ -16,7 +17,7 @@ class StixSourceItem(object):
         try:
             self.stix_package = STIXPackage.from_xml(self.io())
         except UnsupportedVersionError:
-            updated = ramrod.update(self.io(), to_='1.1.1')
+            updated = ramrod.update(self.io(), to_=LATEST_STIX_VERSION)
             document = updated.document.as_stringio()
             self.stix_package = STIXPackage.from_xml(document)
         except Exception:

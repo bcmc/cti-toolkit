@@ -39,15 +39,13 @@ setup(
         ],
     },
     install_requires=[
-        'configargparse',
-        'lxml',
+        'configargparse>=0.12.0',
         'libtaxii>=1.1.111',  # needed for user-agent support
-        'cybox==2.1.0.14',
-        'stix==1.2.0.4',
-        'stix-ramrod',
-        'mixbox',
+        'cybox>=2.1.0.14',
+        'stix>=1.2.0.4',
+        'stix-ramrod>=1.1.0',
+        'mixbox>=1.0.2',
         'pymisp>=2.4.82',
-        'requests',
-        'six',
+        'six>=1.11.0',
     ]
 )

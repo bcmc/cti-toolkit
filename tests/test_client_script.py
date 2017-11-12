@@ -5,13 +5,15 @@ from certau.scripts import stixtransclient
 
 import certau
 import stix
+import pytest
 
-
-def test_text_file_basic_transform(client_wrapper):
+#@pytest.mark.filterwarnings('ignore:The use of this field has been deprecated:UserWarning')
+@pytest.mark.parametrize("stix_version", [111, 12]) 
+def test_text_file_basic_transform(client_wrapper, stix_version):
     """Test the text file loading."""
     client_wrapper.set_command_line([
         '--file',
-        os.path.join('tests', 'CA-TEST-STIX.xml'),
+        ('TEST-STIX-1.2.xml' if stix_version == 12 else 'TEST-STIX-1.1.1.xml'),
         '--text',
     ])
 
@@ -27,11 +29,13 @@ def test_text_file_basic_transform(client_wrapper):
     )
 
 
-def test_bro_with_source_flag_sets_source(client_wrapper):
+
+@pytest.mark.parametrize("stix_version", [111, 12])
+def test_bro_with_source_flag_sets_source(client_wrapper, stix_version):
     """Test a Bro transform with the '--source' flag sets the source."""
     client_wrapper.set_command_line([
         '--file',
-        os.path.join('tests', 'CA-TEST-STIX.xml'),
+        ('TEST-STIX-1.2.xml' if stix_version == 12 else 'TEST-STIX-1.1.1.xml'),
         '--bro',
         '--source',
         'Custom Bro indicator source',
@@ -43,12 +47,12 @@ def test_bro_with_source_flag_sets_source(client_wrapper):
     assert kwargs['source'] == 'Custom Bro indicator source'
 
 
-
-def test_bro_no_notice_flag_sets_do_notice_to_f(client_wrapper):
+@pytest.mark.parametrize("stix_version", [111, 12])
+def test_bro_no_notice_flag_sets_do_notice_to_f(client_wrapper, stix_version):
     """Test the '--bro-no-notice' flag sets meta.do_notice to 'F'."""
     client_wrapper.set_command_line([
         '--file',
-        os.path.join('tests', 'CA-TEST-STIX.xml'),
+        ('TEST-STIX-1.2.xml' if stix_version == 12 else 'TEST-STIX-1.1.1.xml'),
         '--bro',
         '--bro-no-notice',
     ])
