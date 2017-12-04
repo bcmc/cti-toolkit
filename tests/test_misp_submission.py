@@ -17,35 +17,82 @@ except:
 
 import certau.transform
 import stix.core
+from pymisp import __version__ as version
 
 class PublishingTestCase(TestCase):
+	misp_args = {
+		'misp_url': 'http://misp.host.tld/',
+		'misp_key': '111111111111111111111111111',
+	}
+	misp_event_args = {
+		'distribution': '1',
+		'threat_level': '4',
+		'analysis': '0',
+	}
+
+	def adapt_to_misp_version(self, d):
+	    """
+	    Responsible for inspecting misp version and adjusting the specified dictionary
+	    with expected results for a test to match the underlying test code implementation
+	    """
+	    return d
 
 	if six.PY2:
 	    def assertCountEqual(self, item1, item2):
 	        return self.assertItemsEqual(item1, item2)
 
+	def check_version_request_and_get_response(self, request, uri, headers):
+	    """
+	    Responsible for checking all requests of MISP version endpoint. Always returns
+	    the current pymisp version and 200 ok, to all requests
+	    """
+	    self.assertEqual(uri, '{}servers/getPyMISPVersion.json'.format(self.misp_args['misp_url']))
+	    self.assertEqual(headers['content-type'], "application/json") 
+	    self.assertEqual(request.method, 'GET')
+	    self.assertEqual(request.headers.dict['authorization'], self.misp_args['misp_key'])
+	    return (200, headers, json.dumps({ "version": version }))
+
+	def check_tag_request_and_get_response(self, request, uri, headers):
+            """
+	    Responsible for checking all requests to the MISP tags endpoint. Always returns tlp:white 
+            and 200 ok, to all requests
+            """
+            self.assertEqual(uri, "{}tags".format(self.misp_args['misp_url']))
+	    self.assertEqual(request.method, 'GET')
+	    # TODO: check headers?
+	    return (200, headers, json.dumps({}))
+ 
+
+	def check_events_request_and_get_response(self, request, uri, headers):
+           """
+              Responsible for checking all requests to the MISP events endpoint. 
+           """
+	   self.assertEqual(uri, "{}events".format(self.misp_args['misp_url']))
+	   self.assertEqual(request.method, 'POST')
+           self._event_response = (200, request, json.dumps({'Event': {
+                    'id': '0',
+                    'uuid': '590980a2-154c-47fb-b494-26660a00020f',
+                    'info': 'CA-TEST-STIX | Test STIX data',
+                    'distribution': self.misp_event_args['distribution'],
+                }}))
+	   return (200, headers, self._event_response[2])
+
+	def check_attach_tag_request_and_get_response(self, request, uri, headers):
+	   print("***************** callled")
+	   self.assertEqual(request.method, 'POST')
+	   self.assertEqual(uri, "{}tags/attachTagToObject".format(self.misp_args['misp_url']))
+	   self._attach_tag_response = (200, request, json.dumps({}))
+	   return (200, headers, json.dumps({}))
+
+	def check_add_attribute_request_and_get_response(self, request, uri, headers):
+           self.assertEqual(request.method, 'POST')
+	   self._add_attribute_response = (200, request, json.dumps({}))
+	   return (200, headers, self._add_attribute_response[2])
+
 	@httpretty.activate
 	@mock.patch('certau.transform.misp.time.sleep')
 	def test_misp_publishing(self, _):
 	    """Test that the stixtrans module can submit to a MISP server."""
-	    # STIX file to test against. Place in a StringIO instance so we can
-	    # close the file.
-	    with open('tests/CA-TEST-STIX.xml', 'rt') as stix_f:
-	       stix_io = StringIO(stix_f.read())
-
-	    # Create a transformer - select 'text' output format and flag MISP
-	    # publishing (with appropriate settings).
-	    package = stix.core.STIXPackage.from_xml(stix_io)
-	    misp_args = {
-		'misp_url': 'http://misp.host.tld/',
-		'misp_key': '111111111111111111111111111',
-	    }
-	    misp_event_args = {
-		'distribution': '1',
-		'threat_level': '4',
-		'analysis': '0',
-	    }
-
 	    # Ensures that non-registered paths fail
 	    httpretty.HTTPretty.allow_net_connect = False
 
@@ -53,9 +100,7 @@ class PublishingTestCase(TestCase):
 	    httpretty.register_uri(
 		httpretty.GET,
 		'http://misp.host.tld/servers/getPyMISPVersion.json',
-		body=json.dumps({
-		    'version': '2.4.71',
-		}),
+		body=self.check_version_request_and_get_response,
 		content_type='application/json',
 	    )
 
@@ -63,10 +108,7 @@ class PublishingTestCase(TestCase):
 	    httpretty.register_uri(
 		httpretty.GET,
 		'http://misp.host.tld/tags',
-		body=json.dumps({'Tag': [{
-		    'id': '1',
-		    'name': 'tlp:white',
-		}]}),
+                body=self.check_tag_request_and_get_response,
 		content_type='application/json',
 	    )
 
@@ -74,20 +116,16 @@ class PublishingTestCase(TestCase):
 	    httpretty.register_uri(
 		httpretty.POST,
 		'http://misp.host.tld/events',
-		body=json.dumps({'Event': {
-		    'id': '0',
-		    'uuid': '590980a2-154c-47fb-b494-26660a00020f',
-		    'info': 'CA-TEST-STIX | Test STIX data',
-		    'distribution': misp_event_args['distribution'],
-		}}),
+		body=self.check_events_request_and_get_response,
 		content_type='application/json',
 	    )
 
 	    # Mock the adding of a tag to an event
+	    # NB: this does not seem to get called for pymisp v2.4.71 (and probably earlier) but does for current misp implementations
 	    httpretty.register_uri(
 		httpretty.POST,
 		'http://misp.host.tld/tags/attachTagToObject',
-		body=json.dumps({}),
+		body=self.check_attach_tag_request_and_get_response,
 		content_type='application/json',
 	    )
 
@@ -95,49 +133,49 @@ class PublishingTestCase(TestCase):
 	    httpretty.register_uri(
 		httpretty.POST,
 		'http://misp.host.tld/attributes/add/0',
-		body=json.dumps({}),
+		body=self.check_add_attribute_request_and_get_response,
 		content_type='application/json',
 	    )
 
-	    # Perform the processing and the misp publishing.
-	    misp = certau.transform.StixMispTransform.get_misp_object(
-		**misp_args
-	    )
-	    transformer = certau.transform.StixMispTransform(
-		package=package,
-		misp=misp,
-		**misp_event_args
-	    )
-	    transformer.publish()
+	    # STIX file to test against. Place in a StringIO instance so we can
+	    # close the file.
+	    with open('tests/CA-TEST-STIX.xml', 'rt') as stix_f:
+	       stix_io = StringIO(stix_f.read())
 
-	    # Test the correct requests were made
-	    reqs = list(httpretty.httpretty.latest_requests)
+	       # Create a transformer - select 'text' output format and flag MISP
+	       # publishing (with appropriate settings).
+	       package = stix.core.STIXPackage.from_xml(stix_io)
 
-	    # The "get version" request includes the MISP key.
-	    r_get_version = reqs[0]
-	    assert r_get_version.path == '/servers/getPyMISPVersion.json'
-	    headers = { k.lower(): v for k,v in dict(r_get_version.headers).items() }
-	    assert headers['authorization'] == misp_args['misp_key']
+	       # Perform the processing and the misp publishing.
+	       misp = certau.transform.StixMispTransform.get_misp_object(
+		  **self.misp_args
+	       )
+	       transformer = certau.transform.StixMispTransform(
+		  package=package,
+		  misp=misp,
+		  **self.misp_event_args
+	       )
+
+	       # NB: this will cause self._*response to be populated with key values which are used for testing below
+	       transformer.publish()
 
 	    # The event creation request includes basic information.
-	    r_create_event = reqs[2]
-	    assert r_create_event.path == '/events'
-	    assert json.loads(r_create_event.body.decode('utf-8')) == {
+	    print("*** ", self._event_response[1].body)
+	    assert json.loads(self._event_response[1].body) == self.adapt_to_misp_version({
 		u'Event': {
 		    u'Attribute': [],
-		    u'analysis': misp_event_args['analysis'],
+		    u'analysis': self.misp_event_args['analysis'],
 		    u'published': False,
-		    u'threat_level_id': misp_event_args['threat_level'],
-		    u'distribution': misp_event_args['distribution'],
+		    u'threat_level_id': self.misp_event_args['threat_level'],
+		    u'distribution': self.misp_event_args['distribution'],
 		    u'date': '2015-12-23',
 		    u'info': 'CA-TEST-STIX | Test STIX data'
 		}
-	    }
+	    })
 
 	    # The TLP tag is added to the event.
-	    r_add_tag = reqs[4]
-	    assert r_add_tag.path == '/tags/attachTagToObject'
-	    assert json.loads(r_add_tag.body.decode('utf-8')) == {
+	    self.assertIsNotNone(self._add_attribute_response) # must have been called (if not likely web URIs have changed)
+	    assert json.loads(self._add_attribute_response[1].body) == {
 		u'uuid': '590980a2-154c-47fb-b494-26660a00020f',
 		u'tag': '1',
 	    }
@@ -145,7 +183,7 @@ class PublishingTestCase(TestCase):
 	    # The event is then updated with the observables, over multiple
 	    # requests. We're only interested in the 'Attribute' key here as that
 	    # contains the data extracted from the observable.
-	    obs_attributes = [json.loads(request.body.decode('utf-8')) for request in reqs[5:]]
+	    obs_attributes = [json.loads(response[2]) for response in self._observable_responses]
 
 	    self.assertCountEqual(obs_attributes, [
 		{
