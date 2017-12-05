@@ -18,7 +18,9 @@ import certau.transform
 import stix.core
 from pymisp import __version__ as version
 
+
 class PublishingTestCase(TestCase):
+        ################## class variables #################
 	misp_args = {
 		'misp_url': 'http://misp.host.tld/',
 		'misp_key': '111111111111111111111111111',
@@ -28,6 +30,8 @@ class PublishingTestCase(TestCase):
 		'threat_level': '4',
 		'analysis': '0',
 	}
+
+        ################## class methods ###################
 
 	def adapt_to_misp_version(self, d):
 	    """
@@ -112,11 +116,13 @@ class PublishingTestCase(TestCase):
 	       self.assertTrue(d in self.expected_attribute_request)
 	   return ret
 
-	@httpretty.activate
-	@mock.patch('certau.transform.misp.time.sleep')
-	def test_misp_publishing(self, _):
-	    """Test that the stixtrans module can submit to a MISP server."""
-	    # Ensures that non-registered paths fail
+	def setup_for_test_case(self):
+	    """
+            Called automagically by the TestCase superclass, this method arranges to perform per-class setup
+            before any test method is invoked
+            """
+
+  	    # Ensures that non-registered paths fail
 	    httpretty.HTTPretty.allow_net_connect = False
 
 	    # Mock the PyMISP version retrieval
@@ -165,13 +171,13 @@ class PublishingTestCase(TestCase):
  	    # The event creation request includes basic information.
 	    self.expected_event_request = self.adapt_to_misp_version({
 		'Event': {
-		    'Attribute': [],
-		    'analysis': self.misp_event_args['analysis'],
-		    'published': False,
+		    'Attribute':       [],
+		    'analysis':        self.misp_event_args['analysis'],
+		    'published':       False,
 		    'threat_level_id': self.misp_event_args['threat_level'],
-		    'distribution': self.misp_event_args['distribution'],
-		    'date': '2015-12-23',
-		    'info': 'CA-TEST-STIX | Test STIX data'
+		    'distribution':    self.misp_event_args['distribution'],
+		    'date':            '2015-12-23',
+		    'info':            'CA-TEST-STIX | Test STIX data'
 		}
 	    })
   
@@ -372,6 +378,12 @@ class PublishingTestCase(TestCase):
 		    u'value': u'Important project details',
 		},
 	    ]
+
+	@mock.patch('certau.transform.misp.time.sleep')
+	@httpretty.activate
+	def test_misp_publishing(self, _):
+	    """Test that the stixtrans module can submit to a MISP server."""
+	    self.setup_for_test_case()
 
 	    # STIX file to test against. Place in a StringIO instance so we can
 	    # close the file.
