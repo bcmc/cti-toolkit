@@ -108,8 +108,7 @@ class PublishingTestCase(TestCase):
 	       if not u'comment' in d: # pymisp hack so that comment fields are ignored for the purpose of comparison
 	           d[u'comment'] = u''
 	       if not u'distribution' in d:   # FIXME: why do we need this under pymisp v2.4.82 ??? something broken???
-                   d[u'distribution'] = u'5';
-	       print(d)
+                   d[u'distribution'] = u'5'
 	       self.assertTrue(d in self.expected_attribute_request)
 	   return ret
 
