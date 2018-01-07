@@ -12,6 +12,9 @@ import dateutil
 from six.moves.urllib.parse import urlunparse
 
 from certau.source import StixFileSource, TaxiiContentBlockSource
+from certau.transform import StixTextTransform, StixStatsTransform
+from certau.transform import StixCsvTransform, StixBroIntelTransform
+from certau.transform import StixMispTransform, StixSnortTransform
 from certau.transform import transform_package
 from certau.util.stix.ais import ais_refactor
 from certau.util.stix.helpers import package_tlp

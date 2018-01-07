@@ -15,9 +15,10 @@ def package_111():
     If you include 'package_111' as a test argument, you have access to a
     pre-loaded STIX package, ready to transform.
     """
-    with open('TEST-STIX-1.1.1.xml', 'rb') as stix_f:
+    with open('TEST-STIX-1.1.1.xml', 'r') as stix_f:
         stix_io = StringIO(stix_f.read())
         return stix.core.STIXPackage.from_xml(stix_io)
+
 
 @pytest.fixture(scope='session')
 def package_12():
@@ -26,7 +27,7 @@ def package_12():
     If you include 'package_12' as a test argument, you have access to a
     pre-loaded STIX package, ready to transform.
     """
-    with open('TEST-STIX-1.2.xml', 'rb') as stix_f:
+    with open('TEST-STIX-1.2.xml', 'r') as stix_f:
         stix_io = StringIO(stix_f.read())
         return stix.core.STIXPackage.from_xml(stix_io)
 
