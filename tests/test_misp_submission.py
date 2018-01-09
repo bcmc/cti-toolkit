@@ -11,7 +11,6 @@ import stix.core
 
 from random import randint
 from unittest import TestCase
-from parameterized import parameterized
 
 import certau.transform
 
@@ -22,12 +21,8 @@ class PublishingTestCase(TestCase):
         def assertCountEqual(self, item1, item2):
             return self.assertItemsEqual(item1, item2)
 
-    @parameterized.expand([
-        ("STIX 1.1.1", 111),
-        ("STIX 1.2", 12),
-    ])
     @httpretty.activate
-    def test_misp_publishing(self, _, stix_version):
+    def test_misp_publishing(self):
         """Test that the stixtrans module can submit to a MISP server."""
 
         def _create_response_content(fields={}):
@@ -55,7 +50,8 @@ class PublishingTestCase(TestCase):
 
         # STIX file to test against. Place in a StringIO instance so we can
         # close the file.
-        if stix_version == 12:
+        stix_version = stix.version.__version__
+        if stix_version.startswith('1.2'):
             stix_filename = 'TEST-STIX-1.2.xml'
         else:
             stix_filename = 'TEST-STIX-1.1.1.xml'
