@@ -46,14 +46,13 @@ class ais_markings():
         if package.stix_header:
             handling = package.stix_header.handling
             if handling and handling.marking:
-                for marking_spec in handling.marking: #should only have 1 loop
+                for marking_spec in handling.marking: #Expects only 1 loop
                     for marking_struct in marking_spec.marking_structures:
                         if isinstance(marking_struct, ais.AISMarkingStructure):
                             self.ais_proprietary(marking_struct)
                     if marking_spec.information_source:
                         self.ais_info_source(marking_spec.information_source)
-                        #pass
-                        #print("Found information_source structure")
+                        print("Found information_source structure")
                         
     def ais_proprietary(self, marking_struct):
         if marking_struct.is_proprietary:

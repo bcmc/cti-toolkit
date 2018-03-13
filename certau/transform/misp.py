@@ -1,5 +1,6 @@
 import time
 import warnings
+import logging, sys
 from datetime import datetime
 
 from cybox.common import Hash
@@ -15,6 +16,7 @@ from certau.lib.stix.helpers import package_time
 from certau.lib.stix.ais import ais_markings
 from .base import StixTransform
 
+logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 class StixMispTransform(StixTransform):
     """Insert data from a STIX package into a MISP event.
@@ -194,33 +196,37 @@ class StixMispTransform(StixTransform):
             info=self.information,
             date=timestamp.strftime('%Y-%m-%d'),
         )
+        
+        
+        package_tags = set()
+        # Add TLP tag to the set of tags
+        package_tags.add("tlp:{}".format(self.package_tlp().lower()))
 
-        # Add TLP tag to the event
-        package_tlp = self.package_tlp().lower()
-        tlp_tag_id = None
+        ### ais tags
+        ais_struct = ais_markings(self.package)
+        package_tags |= ais_struct.get_set()
+        
+        #iterate through MISP instance's enabled tags and tag the new event with the set of tags
+        print "All tags found in the STIX Package:"
+        for tag in package_tags:
+            logging.debug(tag)
+        logging.debug("___________________________________")
         misp_tags = self.misp.get_all_tags()
         if 'Tag' in misp_tags:
             for tag in misp_tags['Tag']:
-                if tag['name'] == 'tlp:{}'.format(package_tlp):
-                    tlp_tag_id = tag['id']
-                    break
-        if tlp_tag_id is not None:
-            self.misp.tag(self.event['Event']['uuid'], tlp_tag_id)
-            
-        ### ais tags
-        ais_struct = ais_markings(self.package)
-        found_ais_markings = ais_struct.get_set().copy()
-        if 'Tag' in misp_tags:
-            for tag in misp_tags['Tag']:
-                if tag['name'] in found_ais_markings:
+                logging.debug(tag['name'])
+                if tag['name'] in package_tags:
                     self.misp.tag(self.event['Event']['uuid'], tag['id'])
-                    found_ais_markings.remove(tag['name'])
-                    if len(found_ais_markings)== 0:
+                    package_tags.remove(tag['name'])
+                    if len(package_tags)== 0:
                         print("No more elements in set")
                         break
+                logging.debug(tag['name'] + " - 2")
+        if len(package_tags) > 0:
+            logging.info("Malformed tags or tags not enabled in the MISP instance:")
+            for remaining in package_tags:
+                logging.info(remaining)
         
-        for x in ais_struct.get_set():
-            print x
 
     # ##### Overridden class methods
 
