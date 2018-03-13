@@ -12,6 +12,7 @@ warnings.filterwarnings('ignore', 'You\'re using python 2, it is strongly '
 from pymisp import PyMISP
 
 from certau.lib.stix.helpers import package_time
+from certau.lib.stix.ais import ais_markings
 from .base import StixTransform
 
 
@@ -205,6 +206,21 @@ class StixMispTransform(StixTransform):
                     break
         if tlp_tag_id is not None:
             self.misp.tag(self.event['Event']['uuid'], tlp_tag_id)
+            
+        ### ais tags
+        ais_struct = ais_markings(self.package)
+        found_ais_markings = ais_struct.get_set().copy()
+        if 'Tag' in misp_tags:
+            for tag in misp_tags['Tag']:
+                if tag['name'] in found_ais_markings:
+                    self.misp.tag(self.event['Event']['uuid'], tag['id'])
+                    found_ais_markings.remove(tag['name'])
+                    if len(found_ais_markings)== 0:
+                        print("No more elements in set")
+                        break
+        
+        for x in ais_struct.get_set():
+            print x
 
     # ##### Overridden class methods
 
