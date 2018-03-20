@@ -13,7 +13,7 @@ warnings.filterwarnings('ignore', 'You\'re using python 2, it is strongly '
 from pymisp import PyMISP
 
 from certau.lib.stix.helpers import package_time
-from certau.lib.stix.ais import ais_markings
+from certau.lib.stix.ais import ais_markings, AISInfoObject
 from .base import StixTransform
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
@@ -209,23 +209,51 @@ class StixMispTransform(StixTransform):
         #iterate through MISP instance's enabled tags and tag the new event with the set of tags
         print "All tags found in the STIX Package:"
         for tag in package_tags:
-            logging.debug(tag)
-        logging.debug("___________________________________")
+            logging.info(tag)
+        logging.info("___________________________________")
         misp_tags = self.misp.get_all_tags()
         if 'Tag' in misp_tags:
             for tag in misp_tags['Tag']:
-                logging.debug(tag['name'])
+                #logging.info(tag['name'])
                 if tag['name'] in package_tags:
                     self.misp.tag(self.event['Event']['uuid'], tag['id'])
                     package_tags.remove(tag['name'])
                     if len(package_tags)== 0:
                         print("No more elements in set")
                         break
-                logging.debug(tag['name'] + " - 2")
         if len(package_tags) > 0:
             logging.info("Malformed tags or tags not enabled in the MISP instance:")
             for remaining in package_tags:
                 logging.info(remaining)
+       
+        print("Starting AIS-INFO object stuff")  
+#        from pymisp.mispevent import MISPObject
+        tempDict = {'country':'US', 
+                    'industry':'Commercial Facilities Sector',
+                    'adminarea':'US-VA',
+                    'organisation':'GDMS'}
+#        tempMISP = MISPObject(name="ais-info", misp_objects_path_custom="C:\Users\angelo.huan\Documents\Flare")
+#        tempMISP.add_attribute('country',value='US') 
+#        tempMISP.add_attribute('industry',{"type":"text", 'value':'Commercial Facilities Sector'}) 
+#        tempMISP.add_attribute('adminarea',{"type":"text", 'value':'US-VA'}) 
+#        tempMISP.add_attribute('organisation',{"type":"text", 'value':'GDMS'}) 
+#        tempMISP.add_attribute('industry',{"type":"text", 'value':'Dams Sector'})
+        #self.misp.add_attribute()        
+#        ais_infoObj = AISInfoObject("ais-info",tempDict) 
+        from pymisp.tools import GenericObjectGenerator
+        import json
+        template_name1= 'ais-info'
+        misp_obj1 = GenericObjectGenerator(template_name1, misp_objects_path_custom=r"C:\Users\angelo.huan\git\cti-toolkit\certau\lib\stix")
+        json1= json.loads('[{"country": "undisclosed@ppp.com"}, {"industry": "second.to@mail.com"}, {"industry": "third.to@mail.com"}]')
+        misp_obj1.generate_attributes(json1 )
+        try:
+            template_id = [x['ObjectTemplate']['id'] for x in self.misp.get_object_templates_list() if x['ObjectTemplate']['name'] == template_name1][0]
+        except IndexError:
+            valid_types = ", ".join([x['ObjectTemplate']['name'] for x in self.misp.get_object_templates_list()])
+            print ("Template for type %s not found! Valid types are: %s" % (template_name1, valid_types))
+            exit()
+        self.misp.add_object(self.event['Event']['id'], template_id, misp_obj1)           
+        #self.misp.get_object_templates_list()
         
 
     # ##### Overridden class methods
