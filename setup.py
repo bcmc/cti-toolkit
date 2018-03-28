@@ -33,6 +33,7 @@ setup(
         'certau/source',
         'certau/transform',
     },
+    package_data={'certau':['lib/stix/ais-info/definition.json']},
     entry_points={
         'console_scripts': [
             'stixtransclient.py=certau.scripts.stixtransclient:main',
@@ -42,8 +43,8 @@ setup(
         'configargparse',
         'lxml',
         'libtaxii>=1.1.111',  # needed for user-agent support
-        'cybox==2.1.0.13',
-        'stix==1.1.1.8',
+        'cybox>=2.1.0.13',
+        'stix==1.1.1.9',
         'stix-ramrod',
         'mixbox',
         'pymisp>=2.4.71',

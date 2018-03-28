@@ -2,6 +2,7 @@
 from stix.extensions.marking import ais
 from stix.common.information_source import InformationSource
 from pymisp.tools.abstractgenerator import AbstractMISPObjectGenerator
+import os, logging
 #from pymisp.tools import GenericObjectGenerator
 #from pymisp.mispevent import MISPObject
 
@@ -53,7 +54,7 @@ AIS_FORMAT =     {'AISConsent'          :'ais-marking:AISConsent="{}"',
                   }
 
 AIS_INFO_OBJECT_RELATIONS = {
-                'admin_area_code'     :'adminarea',
+                'admin_area_code'     :'administrative-area',
                 'country_code'        :'country',
                 'industry_type'       :'industry',
                 'org_name'            :'organisation',
@@ -82,16 +83,13 @@ class ais_markings():
 #   marking_set = set()
 #    info_set = set()
 #    info_list = []
-    def get_set(self):
-        return self.marking_set
-    def get_info_list(self):
-        return self.info_list
+
 
     def __init__(self, package):
         """Retrieves the STIX package AIS (str) from the header."""
         self.marking_set = set()
-        self.info_set = set()
         self.info_list = []
+        self.ais_info_object = None
         if package.stix_header:
             handling = package.stix_header.handling
             if handling and handling.marking:
@@ -100,8 +98,10 @@ class ais_markings():
                         if isinstance(marking_struct, ais.AISMarkingStructure):
                             self.ais_proprietary(marking_struct)
                     if isinstance(marking_spec.information_source, InformationSource):
-                        print("Found information_source structure")
                         self.ais_info_source(marking_spec.information_source)
+                        self.ais_info_object = AISInfoObject(self.info_list)
+                    else:
+                        logging.warning("Did not find AIS information source structure in STIX file")
                         
                         
     def ais_proprietary(self, marking_struct):
@@ -125,72 +125,60 @@ class ais_markings():
     def ais_info_source(self, info_struct):
         if info_struct.identity.specification:
             identity = info_struct.identity.specification
-            if identity.party_name.organisation_names[0].name_elements[0].value:
+            if identity: #.party_name.organisation_names[0].name_elements[0].value:
                 if identity.party_name:
                     if identity.party_name.organisation_names:
                         if identity.party_name.organisation_names[0].name_elements:
                             if identity.party_name.organisation_names[0].name_elements[0].value:
                                 org_name = identity.party_name.organisation_names[0].name_elements[0].value
-                                self.info_set.add(AIS_FORMAT['org_name'].format(org_name.upper()))
-#                                self.info_list.append((AIS_INFO_OBJECT_RELATIONS['org_name'], org_name))
+                                self.info_list.append((AIS_INFO_OBJECT_RELATIONS['org_name'], org_name))
             if identity.addresses:
                 if identity.addresses[0].country:
                     if identity.addresses[0].country.name_elements:
                         if identity.addresses[0].country.name_elements[0].name_code:
                             country_code = identity.addresses[0].country.name_elements[0].name_code
-                            self.info_set.add(AIS_FORMAT['country_code'].format(country_code.upper()))
+                            self.info_list.append((AIS_INFO_OBJECT_RELATIONS['country_code'], country_code))
 #                        if identity.addresses[0].country.name_elements[0].name_code_type:
 #                            country_code_type = identity.addresses[0].country.name_elements[0].name_code_type
                 if identity.addresses[0].administrative_area:
                     if identity.addresses[0].administrative_area.name_elements:
                         if identity.addresses[0].administrative_area.name_elements[0].name_code:
                             admin_area_code = identity.addresses[0].administrative_area.name_elements[0].name_code
-                            self.info_set.add(AIS_FORMAT['admin_area_code'].format(admin_area_code.upper()))
+                            self.info_list.append((AIS_INFO_OBJECT_RELATIONS['admin_area_code'], admin_area_code))
 #                        if identity.addresses[0].administrative_area.name_elements[0].name_code_type:
 #                            admin_area_code_type = identity.addresses[0].administrative_area.name_elements[0].name_code_type
             if identity.organisation_info:
                 if identity.organisation_info.industry_type:
                     industry_type = identity.organisation_info.industry_type
-                    print("industry_type: " + industry_type)
                     if '|' in str(industry_type):
                         list_industry = str(industry_type).split('|')
                         for ind in list_industry:
                             ind_strip = ind.strip().lower()
                             if ind_strip in INDUSTRY_TYPE:
-                                self.info_set.add(AIS_FORMAT['industry_type'].format(INDUSTRY_TYPE[ind_strip]))
+                                self.info_list.append((AIS_INFO_OBJECT_RELATIONS['industry_type'], INDUSTRY_TYPE[ind_strip]))
+                            else:
+                                logging.warning("Found invalid industry type: " + ind_strip)
                     elif str(industry_type).lower() in INDUSTRY_TYPE:
-                        self.info_set.add(AIS_FORMAT['industry_type'].format(INDUSTRY_TYPE[str(industry_type).lower()]))
-#         print "org_name: " + org_name
-#         print "country_code: " + country_code
-#         print "admin_area_code: " + admin_area_code
-#         print "industry_type: " + industry_type
-#         print("Organization Name: %s" % identity.party_name.organisation_names[0].name_elements[0].value)
-#         self.print_list(identity.party_name.organisation_names)
-#         print("Country: %s" % identity.addresses[0].country.name_elements[0].name_code)
-#         print("Country code type: %s" % identity.addresses[0].country.name_elements[0].name_code_type)
-#         print("Administrative area: %s" % identity.addresses[0].administrative_area.name_elements[0].name_code)
-#         print("Administrative code type: %s" % identity.addresses[0].administrative_area.name_elements[0].name_code_type)
-#         print("Industry Type: %s" % identity.organisation_info.industry_type)
-#         #InformationSource.identity.specification
-            
-        
-    def print_list(self, list1):
-        print ("OBJ: " + str(list1))
-        print (str(type(list1)) + " has " + str(len(list1)) + " elements") 
-        for x in list1:
-            print x
+                        self.info_list.append((AIS_INFO_OBJECT_RELATIONS['industry_type'], INDUSTRY_TYPE[str(industry_type).lower()]))
+
         
 class AISInfoObject(AbstractMISPObjectGenerator):
-    def __init__(self, template_name1, data_dict):
-        super(AISInfoObject, self).__init__(template_name1, 
-                                            misp_objects_path_custom=r"C:\Users\angelo.huan\git\cti-toolkit\certau\lib\stix")
-        self.__data = data_dict
-        self.generate_attributes()
+    def __init__(self, list_tuple_pairs, 
+                 custom_path= os.path.dirname(os.path.realpath(__file__))):
+        super(AISInfoObject, self).__init__("ais-info", 
+                                            misp_objects_path_custom=custom_path)
+        logging.debug("AIS-info object path: "+ custom_path)
+        self.__attributes = list_tuple_pairs
+        self.generate_attributes(self.__attributes)
         
-#template_name1, misp_objects_path_custom=r"C:\Users\angelo.huan\git\cti-toolkit\certau\lib\stix"
-
-    def generate_attributes(self):
-        self.add_attribute('country', value='US')
-#        for key, value in self.__data.items():
-#            self.add_attribute(key, value=value)
+    def generate_attributes(self, list_attributes):
+        for object_relation, value in list_attributes:
+            self.add_attribute(object_relation, value=value)
+    def get_template_id(self, misp, template_name= "ais-info"):
+        try:
+            template_id = [x['ObjectTemplate']['id'] for x in misp.get_object_templates_list() if x['ObjectTemplate']['name'] == template_name][0]
+            return template_id
+        except IndexError:
+            valid_types = ", ".join([x['ObjectTemplate']['name'] for x in misp.get_object_templates_list()])
+            logging.error("MISP Object Template for type %s not found on MISP Instance! Valid types are: %s" % (template_name, valid_types))
                         
