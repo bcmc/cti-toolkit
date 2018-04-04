@@ -44,10 +44,10 @@ setup(
         'lxml',
         'libtaxii>=1.1.111',  # needed for user-agent support
         'cybox>=2.1.0.13',
-        'stix==1.1.1.9',
+        'stix==1.1.1.11',
         'stix-ramrod',
         'mixbox',
-        'pymisp>=2.4.71',
+        'pymisp>=2.4.87',
         'requests',
     ]
 )
