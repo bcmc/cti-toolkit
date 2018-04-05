@@ -53,7 +53,7 @@ def get_arg_parser():
     global_group.add_argument(
         "-V", "--version",
         action="version",
-        version="{} (by CERT Australia)".format(version_string),
+        version="{} (by CERT Australia, forked by GDMS)".format(version_string),
     )
     # Source options
     source_group = parser.add_argument_group('input (source) options')

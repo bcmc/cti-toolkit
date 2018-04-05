@@ -18,8 +18,8 @@ class StixSourceItem(object):
             updated = ramrod.update(self.io(), to_='1.1.1')
             document = updated.document.as_stringio()
             self.stix_package = STIXPackage.from_xml(document)
-        except Exception:
-            logging.error('error parsing STIX package (%s)', self.file_name())
+        except Exception as stix_error:
+            logging.error('error parsing STIX package (%s) Error: %s', self.file_name(), stix_error)
             self.stix_package = None
 
     def io(self):
