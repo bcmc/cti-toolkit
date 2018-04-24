@@ -1,0 +1,8 @@
+1.1.1 - GDMS Fork to support AIS markings and AIS Information Source 
+Mar 28, 2018
+Added a misp object template "ais-info" at certau/lib/stix/ais-info/ to support the AIS information source fields
+Added misp object support for "ais-info"
+Added tag support for misp taxonomy "ais-markings"
+
+1.1.0 - Public CTI Toolkit 
+Nov 8, 2017
