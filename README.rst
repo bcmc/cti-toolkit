@@ -1,4 +1,4 @@
-GDMS Fork of CERT Australia CTI Toolkit v1.1.0
+GDMS Fork (v1.1.1) of CERT Australia CTI Toolkit v1.1.0
 ==========================
 
 .. image:: https://travis-ci.org/certau/cti-toolkit.svg?branch=master
