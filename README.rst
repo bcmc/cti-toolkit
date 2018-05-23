@@ -1,4 +1,4 @@
-CERT Australia CTI Toolkit
+GDMS Fork of CERT Australia CTI Toolkit v1.1.0
 ==========================
 
 .. image:: https://travis-ci.org/certau/cti-toolkit.svg?branch=master
@@ -17,8 +17,8 @@ CERT Australia CTI Toolkit
 .. image:: https://badge.fury.io/py/cti-toolkit.svg
     :target: https://badge.fury.io/py/cti-toolkit
 
-This package contains cyber threat intelligence (CTI) tools created
-by CERT Australia.
+This package contains cyber threat intelligence (CTI) tools forked by GDMS 
+from the v1.1.0 version of CTI-toolkit by CERT Australia.
 
 
 Installation
@@ -39,6 +39,11 @@ That's it. You should now be able to run utilities, such as
 ``stixtransclient.py``::
 
     $ stixtransclient.py -h
+    
+On the MISP instance:
+Install custom MISP object 'ais-info' found with this package at certau\lib\stix\ais-info
+Enable the ais-marking taxonomy
+Refer to the SAG for more details
 
 Documentation
 -------------
@@ -52,6 +57,9 @@ To build the documentation you need Sphinx::
     $ make html
 
 This will create an HTML version of the documentation in ``docs/_build/html``.
+
+This fork adds functionality to handle AIS marking and AIS information source to a MISP event. 
+
 
 Tests
 -----
