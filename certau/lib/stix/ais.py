@@ -100,6 +100,13 @@ class ais_markings():
                     if isinstance(marking_spec.information_source, InformationSource):
                         self.ais_info_source(marking_spec.information_source)
                         self.ais_info_object = AISInfoObject(self.info_list)
+                    elif isinstance(package.stix_header.information_source, InformationSource): #outbound format
+                        outbound = package.stix_header.information_source.contributing_sources.source
+                        if outbound and len(outbound)>0:
+                            self.ais_info_source(package.stix_header.information_source.contributing_sources.source[0])
+                            self.ais_info_object = AISInfoObject(self.info_list)
+                        else:
+                            logging.warning("Did not find contributing_sources.source in AIS information source structure in outbound STIX file")
                     else:
                         logging.warning("Did not find AIS information source structure in STIX file")
                         
