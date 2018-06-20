@@ -6,12 +6,6 @@
     "country"
   ],
   "attributes": {
-    "text": {
-      "description": "A generic description of the AIS information source marking.",
-      "disable_correlation": true,
-      "ui-priority": 0,
-      "misp-attribute": "text"
-    },
     "organisation": {
       "description": "AIS Organisation Name.",
       "misp-attribute": "text",
