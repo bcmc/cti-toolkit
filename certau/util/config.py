@@ -300,7 +300,19 @@ def get_arg_parser():
     misp_group.add_argument(
         "--misp-info",
         # default='Automated STIX ingest',
-        help="MISP event description",
+        help="MISP event description (The info field)",
+    )
+    misp_group.add_argument(
+        "--misp-info-short-only",
+        action="store_true",
+        help=("Don't use the STIX package description for the MISP "
+             "event description if it is longer than 100 chars"),
+    )
+    misp_group.add_argument(
+        "--misp-info-filename-title",
+        action="store_true",
+        help=("Use the STIX filename and package title to build the MISP "
+             "event description"),
     )
     misp_group.add_argument(
         "--misp-published",

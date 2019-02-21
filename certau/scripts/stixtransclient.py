@@ -39,6 +39,8 @@ def main():
 
     transform_kwargs = {}
     transform_kwargs['default_title'] = options.default_title
+    #should this overwrite the value for misp-info?
+
     transform_kwargs['default_description'] = options.default_description
     transform_kwargs['default_tlp'] = options.default_tlp
     if options.stats:
@@ -70,6 +72,8 @@ def main():
         transform_kwargs['threat_level'] = options.misp_threat
         transform_kwargs['analysis'] = options.misp_analysis
         transform_kwargs['information'] = options.misp_info
+        transform_kwargs['info_short_only'] = options.misp_info_short_only
+        transform_kwargs['info_filename_title'] = options.misp_info_filename_title
         transform_kwargs['published'] = options.misp_published
     elif options.snort:
         transform = 'snort'
@@ -86,7 +90,6 @@ def main():
 
     if options.taxii:
         logger.info("Processing a TAXII message")
-
         taxii_client = SimpleTaxiiClient(
             username=options.username,
             password=options.password,
@@ -170,6 +173,11 @@ def main():
                     )
                 source_item.save(options.xml_output)
             else:
+                # Peel off the filenames as they come in
+                try:
+                    transform_kwargs['file_name'] = source_item.file_name()
+                except:
+                    transform_kwargs['file_name'] = ""
                 transform_package(package, transform, transform_kwargs)
 
 

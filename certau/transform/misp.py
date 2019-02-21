@@ -84,7 +84,11 @@ class StixMispTransform(StixTransform):
                  threat_level=1,   # threat
                  analysis=2,       # analysis
                  information=None,
-                 published=False):
+                 published=False,
+                 file_name="",
+                 info_short_only=False,
+                 info_filename_title=False):
+
         super(StixMispTransform, self).__init__(
             package, default_title, default_description, default_tlp,
         )
@@ -94,6 +98,9 @@ class StixMispTransform(StixTransform):
         self.analysis = analysis
         self.information = information
         self.published = published
+        self.file_name = file_name
+        self.info_short_only = info_short_only
+        self.info_filename_title = info_filename_title
 
     # ##### Properties
 
@@ -148,6 +155,30 @@ class StixMispTransform(StixTransform):
         self._published = bool(published)
 
     @property
+    def info_short_only(self):
+        return self._info_short_only
+
+    @info_short_only.setter
+    def info_short_only(self, info_short_only):
+        self._info_short_only = bool(info_short_only)
+
+    @property
+    def info_filename_title(self):
+        return self._info_filename_title
+
+    @info_filename_title.setter
+    def info_filename_title(self, info_filename_title):
+        self._info_filename_title = bool(info_filename_title)
+
+    @property
+    def file_name(self):
+        return self._file_name
+
+    @file_name.setter
+    def file_name(self, file_name):
+        self._file_name = '' if file_name is None else str(file_name)
+
+    @property
     def event(self):
         return self._event
 
@@ -174,14 +205,31 @@ class StixMispTransform(StixTransform):
     def init_misp_event(self):
         if not self.information:
             # Try the package header for some 'info'
+            # Note: This option will overwrite the other info options
             title = self.package_title()
             description = self.package_description()
-            if title or description:
-                self.information = title
-                if title and description:
-                    self.information += ' | '
-                if description:
-                    self.information += description
+
+            # Chop off the file extension
+            wheresmydot = self.file_name.rfind('.')
+            if (wheresmydot < 0):
+                file_name = self.file_name
+            else:
+                file_name = self.file_name[0:wheresmydot]
+
+
+            if self.info_filename_title:
+                if title:
+                    self.information = file_name + ' | ' + title
+                else:
+                    self.information = file_name
+            else:
+                if title and description and not(self.info_short_only and (len(description) > 100)):
+                    self.information = title + ' | ' + description
+                elif title:
+                    self.information = title
+                else:
+                    self.information = file_name
+
 
         timestamp = package_time(self.package) or datetime.now()
 
