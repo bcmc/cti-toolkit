@@ -119,14 +119,14 @@ class PublishingTestCase(TestCase):
 		assert r_create_event.path == '/events'
 		assert json.loads(r_create_event.body.decode('utf-8')) == {
 			u'Event': {
-				u'Tag': [],
-				u'attributes': [],
-				u'analysis': misp_event_args['analysis'],
-				u'published': False,
-				u'threat_level_id': misp_event_args['threat_level'],
+				u'info': u'CA-TEST-STIX | Test STIX data',
 				u'distribution': misp_event_args['distribution'],
+				u'threat_level_id': misp_event_args['threat_level'],
+				u'analysis': misp_event_args['analysis'],
 				u'date': '2015-12-23',
-				u'info': 'CA-TEST-STIX | Test STIX data'
+				u'published': False,
+				#u'Tag': [],
+				#u'attributes': [],
 			}
 		}
 
@@ -143,153 +143,158 @@ class PublishingTestCase(TestCase):
 		# contains the data extracted from the observable.
 		obs_attributes = [json.loads(request.body.decode('utf-8')) for request in reqs[5:]]
 
+		# Need to strip out the randomly seeded uuids to make it a fair comparison.
+		for attributearrays in obs_attributes:
+			for attributes in attributearrays:
+				removal = attributes.pop(u'uuid', None)
+
+		self.maxDiff = None
 		self.assertCountEqual(obs_attributes, [
-			{
+			[{
 				u'category': u'Artifacts dropped',
 				u'disable_correlation': False,
 				u'to_ids': True,
 				u'type': u'md5',
 				u'value': u'11111111111111112977fa0588bd504a',
-			},
-			{
+			}],
+			[{
 				u'category': u'Artifacts dropped',
 				u'disable_correlation': False,
 				u'to_ids': True,
 				u'type': u'md5',
 				u'value': u'ccccccccccccccc33574c79829dc1ccf',
-			},
-			{
+			}],
+			[{
 				u'category': u'Artifacts dropped',
 				u'disable_correlation': False,
 				u'to_ids': True,
 				u'type': u'md5',
 				u'value': u'11111111111111133574c79829dc1ccf',
-			},
-			{
+			}],
+			[{
 				u'category': u'Artifacts dropped',
 				u'disable_correlation': False,
 				u'to_ids': True,
 				u'type': u'md5',
 				u'value': u'11111111111111111f2601b4d21660fb',
-			},
-			{
+			}],
+			[{
 				u'category': u'Artifacts dropped',
 				u'disable_correlation': False,
 				u'to_ids': True,
 				u'type': u'md5',
 				u'value': u'1111111111b42b57f518197d930471d9',
-			},
-			{
+			}],
+			[{
 				u'category': u'Artifacts dropped',
 				u'disable_correlation': False,
 				u'to_ids': True,
 				u'type': u'mutex',
 				u'value': u'\\BaseNamedObjects\\MUTEX_0001',
-			},
-			{
+			}],
+			[{
 				u'category': u'Artifacts dropped',
 				u'disable_correlation': False,
 				u'to_ids': True,
 				u'type': u'mutex',
 				u'value': u'\\BaseNamedObjects\\WIN_ABCDEF',
-			},
-			{
+			}],
+			[{
 				u'category': u'Artifacts dropped',
 				u'disable_correlation': False,
 				u'to_ids': True,
 				u'type': u'mutex',
 				u'value': u'\\BaseNamedObjects\\iurlkjashdk',
-			},
-			{
+			}],
+			[{
 				u'category': u'Artifacts dropped',
 				u'disable_correlation': False,
 				u'to_ids': True,
 				u'type': u'regkey|value',
 				u'value': u'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run|hotkey\\%APPDATA%\\malware.exe -st',
-			},
-			{
+			}],
+			[{
 				u'category': u'Artifacts dropped',
 				u'disable_correlation': False,
 				u'to_ids': True,
 				u'type': u'sha1',
 				u'value': u'893fb19ac24eabf9b1fe1ddd1111111111111111',
-			},
-			{
+			}],
+			[{
 				u'category': u'Artifacts dropped',
 				u'disable_correlation': False,
 				u'to_ids': True,
 				u'type': u'sha256',
 				u'value': u'11111111111111119f167683e164e795896be3be94de7f7103f67c6fde667bdf',
-			},
-			{
+			}],
+			[{
 				u'category': u'Network activity',
 				u'disable_correlation': False,
 				u'to_ids': True,
 				u'type': u'domain',
 				u'value': u'bad.domain.org',
-			},
-			{
+			}],
+			[{
 				u'category': u'Network activity',
 				u'disable_correlation': False,
 				u'to_ids': True,
 				u'type': u'domain',
 				u'value': u'dnsupdate.dyn.net',
-			},
-			{
+			}],
+			[{
 				u'category': u'Network activity',
 				u'disable_correlation': False,
 				u'to_ids': True,
 				u'type': u'domain',
 				u'value': u'free.stuff.com',
-			},
-			{
+			}],
+			[{
 				u'category': u'Network activity',
 				u'disable_correlation': False,
 				u'to_ids': True,
 				u'type': u'ip-dst',
 				u'value': u'183.82.180.95',
-			},
-
-			{
+			}],
+			[{
 				u'category': u'Network activity',
 				u'disable_correlation': False,
 				u'to_ids': True,
 				u'type': u'ip-dst',
 				u'value': u'111.222.33.44',
-			},
-			{
+			}],
+			[{
 				u'category': u'Network activity',
 				u'disable_correlation': False,
 				u'to_ids': True,
 				u'type': u'ip-dst',
 				u'value': u'158.164.39.51',
-			},
-			{
+			}],
+			[{
 				u'category': u'Network activity',
 				u'disable_correlation': False,
 				u'to_ids': True,
 				u'type': u'url',
 				u'value': u'http://host.domain.tld/path/file',
-			},
-			{
+			}],
+			[{
 				u'category': u'Network activity',
 				u'disable_correlation': False,
 				u'to_ids': True,
 				u'type': u'user-agent',
 				u'value': u'Mozilla/5.0 (Windows NT 5.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.2309.372 Safari/537.36',
-			},
-			{
+			}],
+			[{
 				u'category': u'Payload delivery',
 				u'disable_correlation': False,
 				u'to_ids': True,
 				u'type': u'email-src',
 				u'value': u'sender@domain.tld',
-			},
-			{
+			}],
+			[{
 				u'category': u'Payload delivery',
 				u'disable_correlation': False,
 				u'to_ids': True,
 				u'type': u'email-subject',
 				u'value': u'Important project details',
-			},
+			}],
 		])
