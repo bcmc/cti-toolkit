@@ -1,6 +1,8 @@
 """Test setup."""
 import sys
-import StringIO
+
+from six import StringIO
+
 import pytest
 import stix
 from certau.scripts import stixtransclient
@@ -13,23 +15,23 @@ def package():
     If you include 'package' as a test argument, you have access to a
     pre-loaded STIX package, ready to transform.
     """
-    with open('tests/CA-TEST-STIX.xml', 'rb') as stix_f:
-        stix_io = StringIO.StringIO(stix_f.read())
+    with open('tests/CA-TEST-STIX.xml', 'rt') as stix_f:
+        stix_io = StringIO(stix_f.read())
         return stix.core.STIXPackage.from_xml(stix_io)
 
 
 @pytest.fixture
 def client_wrapper(monkeypatch):
     """Wrapper around the client to test command line arguments are mapped to
-    stixtransclient._process_package() properly.
+    certau.transform.transform_package() properly.
     """
     last_call_args = []
 
-    def save_args(pkg, cls, kwargs):
+    def save_args(pkg, transform, kwargs):
         """Drop-in replacement for capturing how it was called."""
         del last_call_args[:]
-        last_call_args.extend((pkg, cls, kwargs))
-    monkeypatch.setattr(stixtransclient, '_process_package', save_args)
+        last_call_args.extend((pkg, transform, kwargs))
+    monkeypatch.setattr(stixtransclient, 'transform_package', save_args)
 
     class ClientWrapper(object):
         """Wrap the two different helpers."""

@@ -1,6 +1,9 @@
 import os
 import logging
-import urlparse
+import dateutil
+import pickle
+
+from six.moves.urllib.parse import urlparse
 
 from libtaxii import get_message_from_http_response, VID_TAXII_XML_11
 from libtaxii.messages_11 import PollRequest, PollFulfillmentRequest
@@ -34,8 +37,6 @@ class SimpleTaxiiClient(HttpClient):
         self.key_file = key_file
         self.cert_file = cert_file
         self.ca_file = ca_file
-
-        self.poll_end_time = None
 
     def setup_authentication(self, use_ssl):
         """Setup the appropriate credentials and authentication type.
@@ -132,12 +133,39 @@ class SimpleTaxiiClient(HttpClient):
         )
         return response
 
+    @staticmethod
+    def get_poll_time(filename, poll_url, collection):
+        if os.path.isfile(filename):
+            with open(filename, 'rb') as state_file:
+                poll_state = pickle.load(state_file)
+                if isinstance(poll_state, dict) and poll_url in poll_state:
+                    if collection in poll_state[poll_url]:
+                        time_string = poll_state[poll_url][collection]
+                        return dateutil.parser.parse(time_string)
+        return None
+
+    @staticmethod
+    def save_poll_time(filename, poll_url, collection, timestamp):
+        if timestamp is not None:
+            poll_state = dict()
+            if os.path.isfile(filename):
+                with open(filename, 'rb') as state_file:
+                    poll_state = pickle.load(state_file)
+                    if not isinstance(poll_state, dict):
+                        raise Exception('unexpected content encountered when '
+                                        'reading TAXII poll state file')
+            if poll_url not in poll_state:
+                poll_state[poll_url] = dict()
+            poll_state[poll_url][collection] = str(timestamp)
+            with open(filename, 'wb') as state_file:
+                pickle.dump(poll_state, state_file, protocol=2)
+
     def poll(self, poll_url, collection, subscription_id=None,
-             begin_timestamp=None, end_timestamp=None):
+             begin_timestamp=None, end_timestamp=None, state_file=None):
         """Send the TAXII poll request to the server using the given URL."""
 
         # Parse the poll_url to get the parts required by libtaxii
-        url_parts = urlparse.urlparse(poll_url)
+        url_parts = urlparse(poll_url)
 
         # Allow credentials to be provided in poll_url
         if url_parts.username and url_parts.password:
@@ -152,6 +180,13 @@ class SimpleTaxiiClient(HttpClient):
 
         # Initialise the authentication settings
         self.setup_authentication(use_ssl)
+
+        if state_file and not begin_timestamp:
+            begin_timestamp = self.get_poll_time(
+                filename=state_file,
+                poll_url=poll_url,
+                collection=collection,
+            )
 
         request = self.create_poll_request(
             collection=collection,
@@ -170,6 +205,7 @@ class SimpleTaxiiClient(HttpClient):
         )
 
         first = True
+        poll_end_time = None
         while True:
             if not isinstance(response, PollResponse):
                 raise Exception('didn\'t get a poll response')
@@ -182,7 +218,7 @@ class SimpleTaxiiClient(HttpClient):
 
             # Save end timestamp from first PollResponse
             if first:
-                self.poll_end_time = response.inclusive_end_timestamp_label
+                poll_end_time = response.inclusive_end_timestamp_label
 
             if len(response.content_blocks) == 0:
                 if first:
@@ -218,4 +254,13 @@ class SimpleTaxiiClient(HttpClient):
                 host=url_parts.hostname,
                 path=url_parts.path,
                 port=url_parts.port,
+            )
+
+        # Update the timestamp for the latest poll
+        if state_file and poll_end_time:
+            self.save_poll_time(
+                filename=state_file,
+                poll_url=poll_url,
+                collection=collection,
+                timestamp=poll_end_time,
             )

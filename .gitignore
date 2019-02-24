@@ -4,6 +4,7 @@
 *.py[cod]
 
 # Distribution / packaging
+__pycache__/
 build/
 dist/
 *.egg-info/

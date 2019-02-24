@@ -2,13 +2,14 @@ import logging
 import pprint
 import copy
 import types
+import six
 
 from mixbox.entities import EntityList
 from cybox.core import Object
 from cybox.common import ObjectProperties
 from stix.core import STIXPackage
 
-import certau.lib.stix.helpers as stix_helpers
+import certau.util.stix.helpers as stix_helpers
 
 
 class StixTransform(object):
@@ -319,10 +320,13 @@ class StixTransform(object):
             return next_parts
 
         def _convert_to_str(value):
-            if isinstance(value, basestring):
-                return value.encode('utf-8')
+            if six.PY2:
+                    if isinstance(value, basestring):
+                        return value.encode('utf-8')
+                    else:
+                        return pprint.pformat(value)
             else:
-                return pprint.pformat(value)
+                    return str(value)
 
         def _get_value_condition(value):
             """Set the condition value to '-' if the field doesn't have a
@@ -362,11 +366,11 @@ class StixTransform(object):
 
             # Test if value is not a string and iterable
             iterable = False
-            if not isinstance(value, types.StringType):
+            if not isinstance(value, six.string_types):
                 try:
                     iter(value)
                     iterable = True
-                except TypeError, error:
+                except TypeError:
                     pass
 
             if iterable:

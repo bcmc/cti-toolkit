@@ -28,8 +28,8 @@ class StixFileSource(object):
 
     def source_items(self):
         for file_ in self.files:
-           for another_file in self.scan(file_):
-               yield StixFileSourceItem(another_file)
+            for another_file in self.scan(file_):
+                yield StixFileSourceItem(another_file)
 
     def scan(self, file_):
         if os.path.isdir(file_):
