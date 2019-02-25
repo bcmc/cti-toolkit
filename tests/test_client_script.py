@@ -24,7 +24,6 @@ def test_text_file_basic_transform(client_wrapper):
         default_title=None,
         default_description=None,
         default_tlp='AMBER',
-        file_name='tests/CA-TEST-STIX.xml',
     )
 
 

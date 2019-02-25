@@ -174,10 +174,11 @@ def main():
                 source_item.save(options.xml_output)
             else:
                 # Peel off the filenames as they come in
-                try:
-                    transform_kwargs['file_name'] = source_item.file_name()
-                except:
-                    transform_kwargs['file_name'] = ""
+                if transform == 'misp':
+                    try:
+                        transform_kwargs['file_name'] = source_item.file_name()
+                    except:
+                        transform_kwargs['file_name'] = ""
                 transform_package(package, transform, transform_kwargs)
 
 
