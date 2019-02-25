@@ -215,7 +215,10 @@ class StixMispTransform(StixTransform):
                 file_name = self.file_name
             else:
                 file_name = self.file_name[0:wheresmydot]
-
+            # Filename reader can pick up some of the path somehow
+            whyisthereaslash = file_name.rfind('/')
+            if (whyisthereaslash > 0):
+                file_name = file_name[whyisthereaslash+1:]
 
             if self.info_filename_title:
                 if title:
