@@ -22,6 +22,8 @@ class StixSourceItem(object):
         except Exception:
             self._logger.error('error parsing STIX package (%s)',
                                self.file_name())
+        except Exception as stix_error:
+            logging.error('error parsing STIX package (%s) Error: %s', self.file_name(), stix_error)
             self.stix_package = None
 
     def io(self):

@@ -1,5 +1,6 @@
 import time
-import logging
+import warnings
+import logging, sys, os
 from datetime import datetime
 
 from cybox.common import Hash
@@ -10,7 +11,8 @@ from cybox.objects.uri_object import URI
 logging.getLogger('pymisp').setLevel(logging.ERROR)
 from pymisp import PyMISP
 
-from certau.util.stix.helpers import package_time
+from certau.lib.stix.helpers import package_time
+from certau.lib.stix.ais import ais_markings, AISInfoObject
 from .base import StixTransform
 
 
@@ -193,17 +195,44 @@ class StixMispTransform(StixTransform):
             date=timestamp.strftime('%Y-%m-%d'),
         )
 
-        # Add TLP tag to the event
-        package_tlp = self.package_tlp().lower()
-        tlp_tag_id = None
+
+        package_tags = set()
+
+        ### ais tags
+        ais_struct = ais_markings(self.package)
+        if ais_struct.marking_set:
+            package_tags |= ais_struct.marking_set
+        else:
+            # Add TLP tag to the set of tags only if there aren't AIS tags
+            package_tags.add("tlp:{}".format(self.package_tlp().lower()))
+
+        #iterate through MISP instance's enabled tags and tag the new event with the set of tags
+        logging.debug( "All tags found in the STIX Package:")
+        for tag in package_tags:
+            logging.debug(tag)
         misp_tags = self.misp.get_all_tags()
         if 'Tag' in misp_tags:
             for tag in misp_tags['Tag']:
-                if tag['name'] == 'tlp:{}'.format(package_tlp):
-                    tlp_tag_id = tag['id']
-                    break
-        if tlp_tag_id is not None:
-            self.misp.tag(self.event['Event']['uuid'], tlp_tag_id)
+                logging.debug("Tag on MISP instance: " + tag['name'])
+                if tag['name'] in package_tags:
+                    self.misp.tag(self.event['Event']['uuid'], tag['id'])
+                    package_tags.remove(tag['name'])
+                    if len(package_tags)== 0:
+                        logging.debug("No more elements in set")
+                        break
+        if len(package_tags) > 0:
+            logging.warning("Malformed tags or tags not enabled in the MISP instance:")
+            for remaining in package_tags:
+                logging.warning(remaining)
+
+        logging.debug("Starting AIS-INFO object stuff")
+
+        if ais_struct.ais_info_object:
+            template_id = ais_struct.ais_info_object.get_template_id(self.misp)
+            if template_id:
+                self.misp.add_object(self.event['Event']['id'], template_id, ais_struct.ais_info_object)
+
+
 
     # ##### Overridden class methods
 

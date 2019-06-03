@@ -42,46 +42,44 @@ AIS_MARKINGS = {'ais-marking:AISConsent="EVERYONE"',
                 'ais-marking:TLPMarking="GREEN"',
                 'ais-marking:TLPMarking="WHITE"'}
 
-AIS_FORMAT = {'AISConsent': 'ais-marking:AISConsent="{}"',
-              'AISMarking': 'ais-marking:AISMarking="{}"',
-              'CISA_Proprietary': 'ais-marking:CISA_Proprietary="{}"',
-              'TLPMarking': 'ais-marking:TLPMarking="{}"',
-              'admin_area_code': 'ais-info:AISAdminAreaNameCode="{}"',
-              'admin_area_code_type': 'ais-info:AISAdminAreaNameCodeType="ISO-3166-2"',
-              'country_code': 'ais-info:AISCountryNameCode="{}"',
-              'country_code_type': 'ais-info:AISCountryNameCodeType="ISO-3166-1_alpha-2"',
-              'industry_type': 'ais-info:AISIndustryType="{}"',
-              'org_name': 'ais-info:AISOrganizationName="{}"'
-              }
+AIS_FORMAT =     {'AISConsent'          :'ais-marking:AISConsent="{}"',
+                  'AISMarking'          :'ais-marking:AISMarking="{}"',
+                  'CISA_Proprietary'    :'ais-marking:CISA_Proprietary="{}"',
+                  'TLPMarking'          :'ais-marking:TLPMarking="{}"',
+                  'admin_area_code'     :'ais-info:AISAdminAreaNameCode="{}"',
+                  'admin_area_code_type':'ais-info:AISAdminAreaNameCodeType="ISO-3166-2"',
+                  'country_code'        :'ais-info:AISCountryNameCode="{}"',
+                  'country_code_type'   :'ais-info:AISCountryNameCodeType="ISO-3166-1_alpha-2"',
+                  'industry_type'       :'ais-info:AISIndustryType="{}"',
+                  'org_name'            :'ais-info:AISOrganizationName="{}"'
+                  }
 
 AIS_INFO_OBJECT_RELATIONS = {
-    'admin_area_code': 'administrative-area',
-    'country_code': 'country',
-    'industry_type': 'industry',
-    'org_name': 'organisation',
-}
+                'admin_area_code'     :'administrative-area',
+                'country_code'        :'country',
+                'industry_type'       :'industry',
+                'org_name'            :'organisation',
+    }
 
 INDUSTRY_TYPE = {
-    'chemical sector': 'Chemical Sector',
-    'commercial facilities sector': 'Commercial Facilities Sector',
-    'communications sector': 'Communications Sector',
-    'critical manufacturing sector': 'Critical Manufacturing Sector',
-    'dams sector': 'Dams Sector',
-    'defense industrial base sector': 'Defense Industrial Base Sector',
-    'emergency services sector': 'Emergency Services Sector',
-    'energy sector': 'Energy Sector',
-    'financial services sector': 'Financial Services Sector',
-    'food and agriculture sector': 'Food and Agriculture Sector',
-    'government facilities sector': 'Government Facilities Sector',
-    'healthcare and public health sector': 'Healthcare and Public Health Sector',
-    'information technology sector': 'Information Technology Sector',
-    'nuclear reactors, materials, and waste sector': 'Nuclear Reactors, Materials, and Waste Sector',
-    'transportation systems sector': 'Transportation Systems Sector',
-    'water and wastewater systems sector': 'Water and Wastewater Systems Sector',
-    'other': 'Other'
-}
-
-
+ 'chemical sector'                              : 'Chemical Sector',
+ 'commercial facilities sector'                 : 'Commercial Facilities Sector',
+ 'communications sector'                        : 'Communications Sector',
+ 'critical manufacturing sector'                : 'Critical Manufacturing Sector',
+ 'dams sector'                                  : 'Dams Sector',
+ 'defense industrial base sector'               : 'Defense Industrial Base Sector',
+ 'emergency services sector'                    : 'Emergency Services Sector',
+ 'energy sector'                                : 'Energy Sector',
+ 'financial services sector'                    : 'Financial Services Sector',
+ 'food and agriculture sector'                  : 'Food and Agriculture Sector',
+ 'government facilities sector'                 : 'Government Facilities Sector',
+ 'healthcare and public health sector'          : 'Healthcare and Public Health Sector',
+ 'information technology sector'                : 'Information Technology Sector',
+ 'nuclear reactors, materials, and waste sector': 'Nuclear Reactors, Materials, and Waste Sector',
+ 'transportation systems sector'                : 'Transportation Systems Sector',
+ 'water and wastewater systems sector'          : 'Water and Wastewater Systems Sector',
+ 'other'                                        : 'Other'
+    }
 class ais_markings():
 
     def __init__(self, package):
@@ -92,7 +90,7 @@ class ais_markings():
         if package.stix_header:
             handling = package.stix_header.handling
             if handling and handling.marking:
-                for marking_spec in handling.marking:  # Expects only 1 loop
+                for marking_spec in handling.marking: #Expects only 1 loop
                     for marking_struct in marking_spec.marking_structures:
                         if isinstance(marking_struct, ais.AISMarkingStructure):
                             self.ais_proprietary(marking_struct)
@@ -109,7 +107,6 @@ class ais_markings():
                                 "Did not find contributing_sources.source in AIS information source structure in outbound STIX file")
                     else:
                         logging.warning("Did not find AIS information source structure in STIX file")
-
     def ais_proprietary(self, marking_struct):
         if marking_struct.is_proprietary:
             proprietary_struct = marking_struct.is_proprietary
@@ -132,7 +129,7 @@ class ais_markings():
     def ais_info_source(self, info_struct):
         if info_struct.identity.specification:
             identity = info_struct.identity.specification
-            if identity:  # .party_name.organisation_names[0].name_elements[0].value:
+            if identity: #.party_name.organisation_names[0].name_elements[0].value:
                 if identity.party_name:
                     if identity.party_name.organisation_names:
                         if identity.party_name.organisation_names[0].name_elements:
@@ -162,13 +159,11 @@ class ais_markings():
                         for ind in list_industry:
                             ind_strip = ind.strip().lower()
                             if ind_strip in INDUSTRY_TYPE:
-                                self.info_list.append(
-                                    (AIS_INFO_OBJECT_RELATIONS['industry_type'], INDUSTRY_TYPE[ind_strip]))
+                                self.info_list.append((AIS_INFO_OBJECT_RELATIONS['industry_type'], INDUSTRY_TYPE[ind_strip]))
                             else:
                                 logging.warning("Found invalid industry type: " + ind_strip)
                     elif str(industry_type).lower() in INDUSTRY_TYPE:
-                        self.info_list.append(
-                            (AIS_INFO_OBJECT_RELATIONS['industry_type'], INDUSTRY_TYPE[str(industry_type).lower()]))
+                        self.info_list.append((AIS_INFO_OBJECT_RELATIONS['industry_type'], INDUSTRY_TYPE[str(industry_type).lower()]))
 
 
 class AISInfoObject(AbstractMISPObjectGenerator):

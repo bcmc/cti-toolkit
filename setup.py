@@ -33,6 +33,7 @@ setup(
         'certau/source',
         'certau/transform',
     },
+    package_data={'certau':['util/stix/ais-info/definition.json']},
     entry_points={
         'console_scripts': [
             'stixtransclient.py=certau.scripts.stixtransclient:main',
