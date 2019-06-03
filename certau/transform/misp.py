@@ -11,8 +11,8 @@ from cybox.objects.uri_object import URI
 logging.getLogger('pymisp').setLevel(logging.ERROR)
 from pymisp import PyMISP
 
-from certau.lib.stix.helpers import package_time
-from certau.lib.stix.ais import ais_markings, AISInfoObject
+from certau.util.stix.helpers import package_time
+from certau.util.stix.ais import ais_markings, AISInfoObject
 from .base import StixTransform
 
 
