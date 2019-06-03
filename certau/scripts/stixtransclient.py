@@ -14,7 +14,6 @@ from six.moves.urllib.parse import urlunparse
 from certau.source import StixFileSource, TaxiiContentBlockSource
 from certau.transform import transform_package, StixMispTransform
 from certau.util.stix.ais import ais_refactor
-import certau.util.stix.ais
 from certau.util.stix.helpers import package_tlp
 from certau.util.taxii.client import SimpleTaxiiClient
 from certau.util.config import get_arg_parser
@@ -26,6 +25,7 @@ from certau.util.stix.helpers import package_tlp, TLP_COLOURS
 from certau.util.taxii.client import SimpleTaxiiClient
 import configargparse
 from certau import version_string
+from certau.util.stix import ais
 
 
 def get_arg_parser():
@@ -341,28 +341,13 @@ def get_arg_parser():
     xml_group.add_argument(
         "--ais-industry-type",
         choices=[
-            ais.CHEMICAL_SECTOR,
-            ais.COMMERCIAL_FACILITIES_SECTOR,
-            ais.COMMUNICATIONS_SECTOR,
-            ais.CRITICAL_MANUFACTURING_SECTOR,
-            ais.DAMS_SECTOR,
-            ais.DEFENSE_INDUSTRIAL_BASE_SECTOR,
-            ais.EMERGENCY_SERVICES_SECTOR,
-            ais.ENERGY_SECTOR,
-            ais.FINANCIAL_SERVICES_SECTOR,
-            ais.FOOD_AND_AGRICULTURE_SECTOR,
-            ais.GOVERNMENT_FACILITIES_SECTOR,
-            ais.HEALTH_CARE_AND_PUBLIC_HEALTH_SECTOR,
-            ais.INFORMATION_TECHNOLOGY_SECTOR,
-            ais.NUCLEAR_REACTORS_MATERIALS_AND_WASTE_SECTOR,
-            ais.OTHER,
-            ais.TRANSPORTATION_SYSTEMS_SECTOR,
-            ais.WATER_AND_WASTEWATER_SYSTEMS_SECTOR,
+            sector for sector in ais.INDUSTRY_TYPE.values()
         ],
-        default=ais.OTHER,
+        default=ais.INDUSTRY_TYPE['other'],
         help="submitter industry type for AIS Marking",
     )
     return parser
+
 
 def _process_package(package, transform_class, transform_kwargs):
     """Loads a STIX package and runs a transform over it."""
