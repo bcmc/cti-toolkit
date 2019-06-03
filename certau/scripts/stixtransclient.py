@@ -24,6 +24,7 @@ from certau.util.stix.ais import ais_refactor
 from certau.util.stix.helpers import package_tlp, TLP_COLOURS
 from certau.util.taxii.client import SimpleTaxiiClient
 import configargparse
+from certau import version_string
 
 
 def get_arg_parser():
