@@ -4,7 +4,7 @@ import configargparse
 
 from stix.extensions.marking import ais
 
-from .. import version_string
+from certau import version_string
 from .stix.helpers import TLP_COLOURS
 
 
