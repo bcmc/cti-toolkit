@@ -14,6 +14,7 @@ from six.moves.urllib.parse import urlunparse
 from certau.source import StixFileSource, TaxiiContentBlockSource
 from certau.transform import transform_package, StixMispTransform
 from certau.util.stix.ais import ais_refactor
+import certau.util.stix.ais
 from certau.util.stix.helpers import package_tlp
 from certau.util.taxii.client import SimpleTaxiiClient
 from certau.util.config import get_arg_parser
