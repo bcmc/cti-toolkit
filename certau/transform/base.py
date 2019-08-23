@@ -222,7 +222,7 @@ class StixTransform(object):
                 (See description above). May be empty.
         """
 
-        def _add_observables(new_observables):
+        def _add_observables(new_observables, comment=""):
             for observable in new_observables:
                 if observable.observable_composition is not None:
                     _add_observables(
@@ -250,6 +250,7 @@ class StixTransform(object):
                             id=observable.id_,
                             observable=observable,
                             fields=fields,
+                            comment=comment,
                         )
                         observables[object_type].append(new_observable)
                         observable_ids.append(observable.id_)
@@ -262,7 +263,7 @@ class StixTransform(object):
         if package.indicators:
             for i in package.indicators:
                 if i.observables:
-                    _add_observables(i.observables)
+                    _add_observables(i.observables,str(i.description))
         return observables
 
     @classmethod

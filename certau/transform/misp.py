@@ -236,7 +236,7 @@ class StixMispTransform(StixTransform):
 
     # ##### Overridden class methods
 
-    def publish_fields(self, fields, object_type):
+    def publish_fields(self, fields, object_type, comment):
         if isinstance(self.MISP_FUNCTION_MAPPING[object_type], list):
             for field, function in zip(
                     self.OBJECT_FIELDS[object_type],
@@ -272,12 +272,12 @@ class StixMispTransform(StixTransform):
                 # A single value
                 field = self.OBJECT_FIELDS[object_type][0]
                 if field in fields:
-                    add_method(self.event, fields[field])
+                    add_method(self.event, fields[field],comment=comment)
 
     def publish_observable(self, observable, object_type):
         if 'fields' in observable:
             for fields in observable['fields']:
-                self.publish_fields(fields, object_type)
+                self.publish_fields(fields, object_type,observable['comment'])
 
     def publish(self):
         if self.observables:
