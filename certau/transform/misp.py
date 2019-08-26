@@ -243,7 +243,7 @@ class StixMispTransform(StixTransform):
                     self.MISP_FUNCTION_MAPPING[object_type]):
                 if field in fields:
                     add_method = getattr(self.misp, function)
-                    add_method(self.event, fields[field])
+                    add_method(self.event, fields[field],comment=comment)
         else:
             add_method = getattr(self.misp,
                                  self.MISP_FUNCTION_MAPPING[object_type])
@@ -251,7 +251,7 @@ class StixMispTransform(StixTransform):
                 # Convert the hash type and value to kwargs
                 hash_type = fields['hashes.type_'].lower()
                 kwargs = {hash_type: fields['hashes.simple_hash_value']}
-                add_method(self.event, **kwargs)
+                add_method(self.event,comment=comment, **kwargs)
             elif object_type == 'WinRegistryKey':
                 # Combine hive and key into regkey
                 regkey = ''
